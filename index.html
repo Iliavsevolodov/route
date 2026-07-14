@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f4c400" />
+  <title>HERO ROUTE — Навигатор партнёра</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="noise"></div>
+  <header class="topbar">
+    <div class="brand">HERO ROUTE</div>
+    <div class="team">КОМАНДА «СУПЕРГЕРОИ»</div>
+  </header>
+
+  <main class="app-shell">
+    <section class="hero">
+      <div class="eyebrow">ПЕРСОНАЛЬНЫЙ НАВИГАТОР</div>
+      <h1>ПОСТРОЙ МАРШРУТ<br><span>К СВОЕМУ ДОХОДУ</span></h1>
+      <p>Выбери цель, расскажи о своём стиле работы — система предложит подходящую стратегию, квалификацию и структуру ветвей.</p>
+      <div class="disclaimer">Расчёты являются ориентировочной моделью на основе маркетинг‑плана Greenway «Ускорение».</div>
+    </section>
+
+    <section class="wizard" id="wizard">
+      <div class="progress-wrap">
+        <div class="progress-meta"><span id="stepLabel">ШАГ 1 ИЗ 4</span><span id="progressPercent">25%</span></div>
+        <div class="progress"><div id="progressBar"></div></div>
+      </div>
+
+      <div class="step active" data-step="1">
+        <div class="step-kicker">ТВОЯ ФИНАНСОВАЯ ЦЕЛЬ</div>
+        <h2>Сколько ты хочешь получать в месяц?</h2>
+        <div class="goal-grid" id="goalGrid"></div>
+      </div>
+
+      <div class="step" data-step="2">
+        <div class="step-kicker">СТИЛЬ РАБОТЫ</div>
+        <h2>Как ты относишься к личным продажам?</h2>
+        <div class="option-stack" id="salesOptions"></div>
+      </div>
+
+      <div class="step" data-step="3">
+        <div class="step-kicker">ЛИЧНЫЙ ОБЪЁМ</div>
+        <h2>Какой личный объём ты готов делать?</h2>
+        <div class="range-card">
+          <div class="range-value"><span id="pvValue">200</span> PV</div>
+          <input id="pvRange" type="range" min="50" max="1000" step="50" value="200" />
+          <div class="range-marks"><span>50 PV</span><span>500 PV</span><span>1000 PV</span></div>
+        </div>
+      </div>
+
+      <div class="step" data-step="4">
+        <div class="step-kicker">ТЕКУЩАЯ ТОЧКА</div>
+        <h2>Какая у тебя сейчас квалификация?</h2>
+        <div class="rank-grid" id="rankGrid"></div>
+      </div>
+
+      <div class="wizard-actions">
+        <button class="btn btn-secondary" id="backBtn" disabled>НАЗАД</button>
+        <button class="btn btn-primary" id="nextBtn">ДАЛЬШЕ →</button>
+      </div>
+    </section>
+
+    <section class="results hidden" id="results">
+      <div class="result-header">
+        <div>
+          <div class="eyebrow">ТВОЙ ПЕРСОНАЛЬНЫЙ МАРШРУТ</div>
+          <h2 id="resultTitle">ЦЕЛЬ: 50 000 ₽</h2>
+        </div>
+        <button class="btn btn-secondary" id="restartBtn">ИЗМЕНИТЬ ДАННЫЕ</button>
+      </div>
+
+      <div class="result-grid">
+        <article class="metric-card accent">
+          <div class="metric-label">ЦЕЛЕВАЯ КВАЛИФИКАЦИЯ</div>
+          <div class="metric-value" id="targetRank">L PRO</div>
+          <div class="metric-note" id="rankNote"></div>
+        </article>
+        <article class="metric-card">
+          <div class="metric-label">РЕКОМЕНДУЕМОЕ КОЛИЧЕСТВО ВЕТВЕЙ</div>
+          <div class="metric-value" id="branchesCount">3–4</div>
+          <div class="metric-note">Сильные + резервные развивающиеся ветви</div>
+        </article>
+        <article class="metric-card">
+          <div class="metric-label">ТВОЯ СТРАТЕГИЯ</div>
+          <div class="metric-value small" id="strategyName">СМЕШАННАЯ</div>
+          <div class="metric-note" id="strategyNote"></div>
+        </article>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">КАК МОЖЕТ ВЫГЛЯДЕТЬ СТРУКТУРА</div>
+        <div class="branch-map" id="branchMap"></div>
+      </div>
+
+      <div class="two-col">
+        <div class="panel">
+          <div class="panel-title">ИЗ ЧЕГО МОЖЕТ СКЛАДЫВАТЬСЯ ДОХОД</div>
+          <div id="incomeBreakdown" class="breakdown"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">ЧТО НУЖНО ВЫПОЛНИТЬ</div>
+          <div id="requirements" class="requirements"></div>
+        </div>
+      </div>
+
+      <div class="panel roadmap-panel">
+        <div class="panel-title">МАРШРУТ НА 90 ДНЕЙ</div>
+        <div class="roadmap" id="roadmap"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>HERO ROUTE</span>
+    <span>Персональный маршрут к цели</span>
+  </footer>
+
+  <script src="./app.js"></script>
+</body>
+</html>
