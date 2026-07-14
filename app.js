@@ -1,48 +1,124 @@
+const UE=90;
 const goals=[10000,20000,35000,50000,70000,100000,150000,200000];
 const salesModes=[
- {id:'sales',title:'Люблю продавать',text:'Основной упор на клиентов, личный объём и повторные заказы.'},
- {id:'mixed',title:'Готов совмещать',text:'Личные продажи плюс развитие нескольких самостоятельных ветвей.'},
- {id:'team',title:'Не люблю продавать',text:'Основной упор на запуск партнёров, ветви и лидерские квалификации.'}
+{id:'sales',title:'Люблю продавать',text:'Больше клиентов, высокий ЛО и быстрый личный денежный поток.'},
+{id:'mixed',title:'Готов совмещать',text:'Баланс клиентов, личного объёма и развития самостоятельных ветвей.'},
+{id:'team',title:'Не люблю продавать',text:'Минимально необходимый ЛО, основной фокус — партнёры и лидеры.'}
 ];
 const ranks=['Новичок','S1','S2','L','L1','L2','L3','M','M1','M2','GM'];
-const state={step:1,goal:null,sales:null,pv:200,rank:null};
-
+const state={step:1,goal:null,sales:null,pv:200,rank:null,account:'currency'};
 const $=s=>document.querySelector(s);
-const goalGrid=$('#goalGrid'),salesOptions=$('#salesOptions'),rankGrid=$('#rankGrid');
 
-goals.forEach(v=>{const b=document.createElement('button');b.className='choice';b.textContent=v.toLocaleString('ru-RU')+' ₽';b.onclick=()=>selectChoice(goalGrid,b,()=>state.goal=v);goalGrid.appendChild(b)});
-salesModes.forEach((o,i)=>{const b=document.createElement('div');b.className='option-card';b.innerHTML=`<div class="option-index">0${i+1}</div><div><strong>${o.title}</strong><span>${o.text}</span></div>`;b.onclick=()=>selectChoice(salesOptions,b,()=>state.sales=o.id);salesOptions.appendChild(b)});
-ranks.forEach(v=>{const b=document.createElement('button');b.className='choice';b.textContent=v;b.onclick=()=>selectChoice(rankGrid,b,()=>state.rank=v);rankGrid.appendChild(b)});
-
-function selectChoice(parent,node,cb){[...parent.children].forEach(x=>x.classList.remove('selected'));node.classList.add('selected');cb()}
-$('#pvRange').oninput=e=>{state.pv=+e.target.value;$('#pvValue').textContent=state.pv};
-
-function valid(){if(state.step===1)return !!state.goal;if(state.step===2)return !!state.sales;if(state.step===4)return !!state.rank;return true}
-function updateStep(){document.querySelectorAll('.step').forEach(s=>s.classList.toggle('active',+s.dataset.step===state.step));$('#stepLabel').textContent=`ШАГ ${state.step} ИЗ 4`;$('#progressPercent').textContent=`${state.step*25}%`;$('#progressBar').style.width=`${state.step*25}%`;$('#backBtn').disabled=state.step===1;$('#nextBtn').textContent=state.step===4?'ПОСТРОИТЬ МАРШРУТ →':'ДАЛЬШЕ →'}
-$('#nextBtn').onclick=()=>{if(!valid()){alert('Выбери один из вариантов, чтобы продолжить.');return}if(state.step<4){state.step++;updateStep();return}buildResults()};
-$('#backBtn').onclick=()=>{if(state.step>1){state.step--;updateStep()}};
-$('#restartBtn').onclick=()=>{$('#results').classList.add('hidden');$('#wizard').classList.remove('hidden');window.scrollTo({top:$('#wizard').offsetTop-20,behavior:'smooth'})};
-
-const plans=[
- {max:10000,rank:'S1',branches:1,branchRanks:['S1'],base:'КЛИЕНТСКАЯ',note:'Высокая доля личного объёма и первые активные партнёры.',income:[55,30,15]},
- {max:20000,rank:'S2',branches:2,branchRanks:['S1','S1'],base:'КЛИЕНТСКО-КОМАНДНАЯ',note:'Клиенты дают быстрый денежный поток, ветви создают рост.',income:[45,35,20]},
- {max:35000,rank:'L',branches:3,branchRanks:['S2','S1','S1'],base:'СМЕШАННАЯ',note:'Сочетание стабильного ЛО и развития трёх ветвей.',income:[30,50,20]},
- {max:50000,rank:'L1',branches:3,branchRanks:['L','S2','S1'],base:'ЛИДЕРСКАЯ',note:'Фокус на первой лидерской ветви и резервных направлениях.',income:[22,53,25]},
- {max:70000,rank:'L2 PRO',branches:4,branchRanks:['L','L','S2','S1'],base:'ЛИДЕРСКАЯ PRO',note:'Несколько сильных ветвей, ЛГО и выполнение PRO-условий.',income:[17,55,28]},
- {max:100000,rank:'M PRO',branches:5,branchRanks:['L','L','L','L','L'],base:'СИСТЕМНАЯ',note:'Пять активных направлений и дубликация лидерской модели.',income:[12,58,30]},
- {max:150000,rank:'M1 PRO',branches:5,branchRanks:['M','L','L','L','L'],base:'МАСШТАБИРУЕМАЯ',note:'Мастерская ветвь, четыре лидерские ветви и глубина.',income:[10,57,33]},
- {max:Infinity,rank:'M2 PRO',branches:5,branchRanks:['M','M','L','L','L'],base:'ЛИДЕРСКАЯ СИСТЕМА',note:'Две мастерские ветви, лидерская глубина и квартальные бонусы.',income:[8,57,35]}
+const scenarios=[
+{max:10000,rank:'S1',lgo:750,branches:['S1'],active:2,strategy:'КЛИЕНТСКИЙ СТАРТ',pro:null,regular:[35,35,20,10]},
+{max:20000,rank:'S2',lgo:1500,branches:['S1','S1'],active:3,strategy:'КЛИЕНТЫ + КОМАНДА',pro:null,regular:[30,40,20,10]},
+{max:35000,rank:'L',lgo:3000,branches:['S2','S1','S1'],active:5,strategy:'ПЕРВЫЙ ЛИДЕР',pro:null,regular:[22,48,20,10]},
+{max:50000,rank:'L PRO',lgo:5000,branches:['S2','S2','S1','S1','S1'],active:5,strategy:'L PRO / БОКОВИК',pro:'L',regular:[17,53,20,10]},
+{max:70000,rank:'L2 PRO',lgo:4000,branches:['L','L','S2','S1','S1'],active:5,strategy:'ДВЕ ЛИДЕРСКИЕ ВЕТВИ',pro:'L',regular:[14,48,28,10]},
+{max:100000,rank:'M PRO',lgo:3000,branches:['L','L','L','L','L'],active:5,strategy:'ПЯТЬ ЛИДЕРСКИХ ВЕТВЕЙ',pro:'M',regular:[10,42,38,10]},
+{max:150000,rank:'M1 PRO',lgo:3000,branches:['M','L','L','L','L'],active:5,strategy:'МАСТЕРСКАЯ ГЛУБИНА',pro:'M',regular:[8,39,43,10]},
+{max:Infinity,rank:'M2 PRO',lgo:3000,branches:['M','M','L','L','L'],active:5,strategy:'ДВЕ МАСТЕРСКИЕ ВЕТВИ',pro:'M',regular:[7,36,47,10]}
 ];
 
-function pickPlan(goal){return plans.find(p=>goal<=p.max)}
-function adjusted(plan){const p=JSON.parse(JSON.stringify(plan));if(state.sales==='sales'){p.base='КЛИЕНТСКАЯ + КОМАНДА';p.note='Ты готов компенсировать часть командного дохода личными продажами.';p.income=[Math.min(65,p.income[0]+18),Math.max(20,p.income[1]-10),Math.max(15,p.income[2]-8)]}if(state.sales==='team'){p.base='КОМАНДНО-ЛИДЕРСКАЯ';p.note='Продажи сведены к необходимому личному объёму, основной рост дают партнёры.';p.income=[Math.max(5,p.income[0]-8),p.income[1]+3,p.income[2]+5]}if(state.pv>=500&&['S1','S2','L'].includes(p.rank)){p.note+=' ЛО '+state.pv+' PV ускоряет достижение цели.'}return p}
+const goalGrid=$('#goalGrid'),salesOptions=$('#salesOptions'),rankGrid=$('#rankGrid');
+goals.forEach(v=>{const b=document.createElement('button');b.className='choice';b.textContent=v.toLocaleString('ru-RU')+' ₽';b.onclick=()=>select(goalGrid,b,()=>state.goal=v);goalGrid.appendChild(b)});
+salesModes.forEach((o,i)=>{const b=document.createElement('div');b.className='option-card';b.innerHTML=`<div class="option-index">0${i+1}</div><div><strong>${o.title}</strong><span>${o.text}</span></div>`;b.onclick=()=>select(salesOptions,b,()=>state.sales=o.id);salesOptions.appendChild(b)});
+ranks.forEach(v=>{const b=document.createElement('button');b.className='choice';b.textContent=v;b.onclick=()=>select(rankGrid,b,()=>state.rank=v);rankGrid.appendChild(b)});
+function select(parent,node,cb){[...parent.children].forEach(x=>x.classList.remove('selected'));node.classList.add('selected');cb()}
+$('#pvRange').oninput=e=>{state.pv=+e.target.value;$('#pvValue').textContent=state.pv};
+function valid(){return state.step===1?!!state.goal:state.step===2?!!state.sales:state.step===4?!!state.rank:true}
+function updateStep(){document.querySelectorAll('.step').forEach(s=>s.classList.toggle('active',+s.dataset.step===state.step));$('#stepLabel').textContent=`ШАГ ${state.step} ИЗ 4`;$('#progressPercent').textContent=`${state.step*25}%`;$('#progressBar').style.width=`${state.step*25}%`;$('#backBtn').disabled=state.step===1;$('#nextBtn').textContent=state.step===4?'ПОСТРОИТЬ МАРШРУТ →':'ДАЛЬШЕ →'}
+$('#nextBtn').onclick=()=>{if(!valid())return alert('Выбери вариант, чтобы продолжить.');if(state.step<4){state.step++;updateStep()}else buildResults()};
+$('#backBtn').onclick=()=>{if(state.step>1){state.step--;updateStep()}};
+$('#restartBtn').onclick=()=>{$('#results').classList.add('hidden');$('#wizard').classList.remove('hidden');scrollTo({top:$('#wizard').offsetTop-15,behavior:'smooth'})};
 
-function buildResults(){const p=adjusted(pickPlan(state.goal));$('#wizard').classList.add('hidden');$('#results').classList.remove('hidden');$('#resultTitle').textContent=`ЦЕЛЬ: ${state.goal.toLocaleString('ru-RU')} ₽ В МЕСЯЦ`;$('#targetRank').textContent=p.rank;$('#branchesCount').textContent=p.branches===1?'1':`${Math.max(2,p.branches-1)}–${p.branches}`;$('#strategyName').textContent=p.base;$('#strategyNote').textContent=p.note;
- const pro=p.rank.includes('PRO');$('#rankNote').textContent=pro?'Квартальные PRO-бонусы считаются отдельно и требуют выполнения условий три периода подряд.':'Переходная квалификация для выбранной финансовой цели.';
- renderBranches(p);renderIncome(p);renderRequirements(p);renderRoadmap(p);window.scrollTo({top:$('#results').offsetTop-10,behavior:'smooth'})}
+document.querySelectorAll('.tab').forEach(tab=>tab.onclick=()=>{document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');state.account=tab.dataset.tab;renderAccounts(currentPlan)});
+let currentPlan=null;
+function pickPlan(){return structuredClone(scenarios.find(p=>state.goal<=p.max))}
+function adapt(p){
+ if(state.sales==='sales'){p.strategy='КЛИЕНТСКИЙ УСКОРИТЕЛЬ';p.regular=[Math.min(45,p.regular[0]+13),Math.max(25,p.regular[1]-7),Math.max(15,p.regular[2]-5),p.regular[3]-1]}
+ if(state.sales==='team'){p.strategy='КОМАНДНАЯ ДУПЛИКАЦИЯ';p.regular=[Math.max(5,p.regular[0]-5),p.regular[1]+2,p.regular[2]+2,p.regular[3]+1]}
+ return p;
+}
+function money(v){return Math.round(v).toLocaleString('ru-RU')+' ₽'}
+function personalBonus(pv){return pv>50?(pv-50)*.2*UE:0}
+function giftBonus(pv){if(pv>=500)return (pv*.2+5)*UE;if(pv>=200)return (pv*.1+5)*UE;if(pv>=50)return 5*UE;return 0}
+function mentorBonus(active){const currency=Math.max(0,active-2)*10*UE;const gift=Math.min(2,active)*10*UE;return{currency,gift}}
+function mentorPremium(active){const ue=active>=20?120:active>=15?90:active>=10?60:active>=5?20:0;return ue*UE}
+function lproQuarter(p){return p.pro? p.lgo*.03*UE*3:0}
 
-function renderBranches(p){const el=$('#branchMap');el.innerHTML='';p.branchRanks.forEach((r,i)=>{const d=document.createElement('div');d.className='branch';d.innerHTML=`<div class="branch-no">ВЕТВЬ 0${i+1}</div><div class="branch-rank">${r}</div><div class="branch-desc">${r==='L'||r==='M'?'Ключевая самостоятельная ветвь':'Развивающаяся или резервная ветвь'}</div>`;el.appendChild(d)})}
-function renderIncome(p){const [personal,group,lead]=p.income;const vals=[Math.round(state.goal*personal/100),Math.round(state.goal*group/100),state.goal-Math.round(state.goal*personal/100)-Math.round(state.goal*group/100)];const labels=['Личный и клиентский результат','Групповой бонус','Лидерские и PRO-бонусы'];$('#incomeBreakdown').innerHTML=labels.map((l,i)=>`<div class="break-row"><span>${l}</span><strong>≈ ${vals[i].toLocaleString('ru-RU')} ₽</strong></div>`).join('')+'<div class="break-row"><span><b>Ориентир всего</b></span><strong>'+state.goal.toLocaleString('ru-RU')+' ₽</strong></div>'}
-function renderRequirements(p){const pro=p.rank.includes('PRO');const req=[`Поддерживать личный объём не ниже ${state.pv} PV.`,`Создать ${p.branches} активных направлений первой линии.`,`Довести ключевые ветви до целевых квалификаций: ${p.branchRanks.join(', ')}.`,`Контролировать ЛГО и распределение объёма, а не только общий товарооборот.`];if(pro)req.push('Иметь минимум 5 активных партнёров первой линии и выполнять PRO-условия каждый период квартала.');$('#requirements').innerHTML=req.map((x,i)=>`<div class="req"><i>${i+1}</i><span>${x}</span></div>`).join('')}
-function renderRoadmap(p){const months=[{h:'МЕСЯЦ 1 — ФУНДАМЕНТ',t:'Закрепить личный объём, сформировать список кандидатов и открыть первые направления.',u:['ЛО '+state.pv+' PV','20–40 новых диалогов','Первые 1–2 активных партнёра']},{h:'МЕСЯЦ 2 — ВЕТВИ',t:'Определить потенциальных лидеров и запустить дубликацию простых действий.',u:['Усилить '+Math.min(3,p.branches)+' ветви','Вывести партнёров на S1/S2','Проводить еженедельные разборы']},{h:'МЕСЯЦ 3 — КВАЛИФИКАЦИЯ',t:'Закрыть дефицит объёма, усилить слабую ветвь и сформировать резерв.',u:['Цель: '+p.rank,'Проверить требования по ветвям','Создать запас 10–15% объёма']}];$('#roadmap').innerHTML=months.map(m=>`<div class="month"><h3>${m.h}</h3><p>${m.t}</p><ul>${m.u.map(x=>`<li>${x}</li>`).join('')}</ul></div>`).join('')}
+function buildResults(){
+ currentPlan=adapt(pickPlan());const p=currentPlan;
+ $('#wizard').classList.add('hidden');$('#results').classList.remove('hidden');
+ $('#resultTitle').textContent=`ЦЕЛЬ: ${money(state.goal)} В МЕСЯЦ`;
+ $('#targetRank').textContent=p.rank;$('#targetLgo').textContent=p.lgo.toLocaleString('ru-RU')+' PV';$('#strategyName').textContent=p.strategy;
+ $('#strategyNote').textContent=state.sales==='sales'?'Часть результата быстрее создаётся клиентами и высоким ЛО.':state.sales==='team'?'Главный рычаг — запуск самостоятельных партнёров и глубина ветвей.':'Баланс личного результата и командного роста.';
+ $('#rankNote').textContent=p.pro==='L'?`L PRO: 5 активных в первой линии и ЛГО ${p.lgo} PV три периода квартала.`:p.pro==='M'?'M PRO: ЛГО 3 000 PV, 5 лидерских ветвей и 5 активных в первой линии.':'Переходная квалификация без квартального PRO-статуса.';
+ renderTree(p);renderAccounts(p);renderIncome(p);renderPro(p);renderStrategy(p);renderRoadmap(p);renderReference();
+ scrollTo({top:$('#results').offsetTop-12,behavior:'smooth'});
+}
+function renderTree(p){
+ const nodes=p.branches.map((r,i)=>`<div class="node-wrap"><div class="circle-node ${i>=Math.ceil(p.branches.length*.7)?'reserve':''}">${r}</div><div class="node-label">${i<Math.ceil(p.branches.length*.7)?'Ключевая самостоятельная ветвь':'Резерв и усиление ширины'}</div></div>`).join('');
+ $('#treeMap').innerHTML=`<div class="tree-root">${p.rank.replace(' PRO','')}</div><div class="tree-branches">${nodes}</div>`;
+}
+function renderAccounts(p){
+ const m=mentorBonus(p.active);
+ const currency=[
+ ['Личный бонус',personalBonus(state.pv),'20% с ЛО выше 50 PV'],
+ ['Бонус наставника',m.currency,'с 3-го активного партнёра'],
+ ['Премия наставника',mentorPremium(p.active),`${p.active} активных в первой линии`],
+ ['Групповой бонус',p.lgo*(p.rank==='S1'?.03:p.rank==='S2'?.06:.12)*UE,'3% / 6% / 12% по квалификации'],
+ ['Лидерский бонус',p.branches.some(x=>x==='L'||x==='M')?state.goal*.18:0,'от L1: поколения L с компрессией']
+ ];
+ const gift=[['Подарочный бонус',giftBonus(state.pv),state.pv>=500?'20% + 5 у.е.':state.pv>=200?'10% + 5 у.е.':'5 у.е.'],['Первые 2 активации наставника',m.gift,'10 у.е. за каждого']];
+ const rows=state.account==='currency'?currency:gift;
+ $('#accountBreakdown').innerHTML=rows.map(x=>`<div class="break-row"><span><b class="account-tag ${state.account==='gift'?'gift':''}">${state.account==='gift'?'ПОДАРОЧНЫЙ':'ВАЛЮТНЫЙ'}</b>${x[0]}<small><br>${x[2]}</small></span><strong>${x[1]?`≈ ${money(x[1])}`:'—'}</strong></div>`).join('');
+}
+function renderIncome(p){
+ let shares=[...p.regular];const labels=['Личный результат','Групповой бонус','Лидерская глубина','Наставничество'];
+ let used=0;const rows=shares.map((s,i)=>{const v=i===shares.length-1?state.goal-used:Math.round(state.goal*s/100);used+=v;return [labels[i],v]});
+ let extra='';
+ if(p.pro==='L')extra=`<div class="break-row"><span><b>Квартальная премия L PRO</b><br><small>3% × ${p.lgo} PV × 90 ₽ × 3 периода</small></span><strong>≈ ${money(lproQuarter(p))}</strong></div>`;
+ if(p.pro==='M')extra=`<div class="break-row"><span><b>Премия L PRO за квартал</b><br><small>3% × 3 000 PV × 90 ₽ × 3</small></span><strong>≈ ${money(lproQuarter(p))}</strong></div><div class="break-row"><span><b>Мастер Пул PRO</b><br><small>2% мирового объёма, распределение по лидерским ветвям</small></span><strong>ориентир 450–500 тыс. ₽</strong></div>`;
+ $('#incomeBreakdown').innerHTML=rows.map(x=>`<div class="break-row"><span>${x[0]}</span><strong>≈ ${money(x[1])}</strong></div>`).join('')+`<div class="break-row"><span><b>Регулярный месячный ориентир</b></span><strong>${money(state.goal)}</strong></div>`+extra;
+}
+function renderPro(p){
+ if(!p.pro){$('#proFlow').innerHTML='<div class="flow-step"><div class="flow-num">1</div><strong>Сначала квалификация</strong><p>Закрой текущую целевую квалификацию. PRO подключается с уровня L при выполнении отдельных условий.</p></div>';return}
+ const steps=p.pro==='L'[
+ ['Квалификация',p.rank.replace(' PRO','')],['ЛГО',`${p.lgo} PV каждый период`],['Первая линия','5+ активных по 50 PV'],['Квартал','3 периода подряд'],['Выплата',`L PRO ≈ ${money(lproQuarter(p))}`]
+ ]:[['Квалификация',p.rank.replace(' PRO','')],['ЛГО','3 000 PV каждый период'],['Ветви','5+ лидерских ветвей'],['Первая линия','5+ активных'],['Квартал','L PRO + доля Master Pool']];
+ $('#proFlow').innerHTML=steps.map((s,i)=>`<div class="flow-step"><div class="flow-num">${i+1}</div><strong>${s[0]}</strong><p>${s[1]}</p></div>`).join('');
+}
+function renderStrategy(p){
+ const dialogs=state.sales==='sales'?18:state.sales==='mixed'?25:32;const presentations=Math.ceil(dialogs*.3);const starts=Math.max(2,Math.ceil(p.branches.length/2));
+ const cards=[
+ ['ЛИЧНЫЙ ФУНДАМЕНТ',[`ЛО ${state.pv} PV каждый период`,`Клиентская база: ${state.sales==='sales'?'15–25':'5–12'} активных клиентов`,'Повторные заказы и рекомендации']],
+ ['ШИРИНА ПЕРВОЙ ЛИНИИ',[`${p.active}+ активных партнёров`,`Не менее ${starts} новых запусков в месяц`,'Первые 2 активации идут на подарочный счёт']],
+ ['РАЗВИТИЕ ВЕТВЕЙ',[`Целевая модель: ${p.branches.join(' · ')}`,`Не складывать весь объём в одну ветвь`,'Каждому потенциальному лидеру — свой маршрут']],
+ ['РИТМ ДЕЙСТВИЙ',[`${dialogs} новых диалогов в неделю`,`${presentations} презентаций в неделю`,'1 командный разбор + контроль цифр каждую неделю']]
+ ];
+ $('#strategyGrid').innerHTML=cards.map((c,i)=>`<div class="strategy-card"><div class="big-no">0${i+1}</div><h3>${c[0]}</h3><ul>${c[1].map(x=>`<li>${x}</li>`).join('')}</ul></div>`).join('');
+}
+function renderRoadmap(p){
+ const months=[
+ {h:'МЕСЯЦ 1 — ОСНОВА',p:'Создать личный денежный поток и необходимую ширину первой линии.',u:[`Удержать ЛО ${state.pv} PV`,`Запустить ${Math.max(2,Math.ceil(p.active/2))} активных партнёров`,`Выделить ${Math.min(3,p.branches.length)} кандидатов в лидеры`]},
+ {h:'МЕСЯЦ 2 — ВЕТВИ',p:'Перевести активность из личных действий в самостоятельные направления.',u:[`Довести первые ветви до S1/S2`,`Сделать еженедельный план каждой ветви`,`Закрыть не менее 70% целевого ЛГО ${p.lgo} PV`]},
+ {h:'МЕСЯЦ 3 — ФИКСАЦИЯ',p:'Закрыть квалификацию и создать запас, чтобы результат не зависел от последних дней.',u:[`Целевая точка: ${p.rank}`,`Запас объёма 10–15%`,`PRO-условия проверить до начала каждого периода`]}
+ ];
+ $('#roadmap').innerHTML=months.map(m=>`<div class="month"><h3>${m.h}</h3><p>${m.p}</p><ul>${m.u.map(x=>`<li>${x}</li>`).join('')}</ul></div>`).join('');
+}
+function renderReference(){
+ const cards=[
+ ['Подарочный бонус','ЛО 50+ → 5 у.е.; 200+ → 10% + 5 у.е.; 500+ → 20% + 5 у.е.','Начисляется на подарочный счёт.'],
+ ['Личный бонус','(ЛО − 50 PV) × 20% × курс у.е.','При ЛО 50 PV и меньше не начисляется.'],
+ ['Бонус наставника','10 у.е. за активированного партнёра 50+ PV','Первые 2 — подарочный счёт, с 3-го — валютный.'],
+ ['Премия наставника','5–9: 20 у.е.; 10–14: 60; 15–19: 90; 20+: 120','Начисляется на валютный счёт.'],
+ ['Групповой бонус','S1: 3%; S2: 6%; L+: 12% с ЛО и неквалифицированных','Также 9% с ближайших S1 и 6% с ближайших S2 для L+.'],
+ ['Лидерский бонус','От L1: 4% / 3% / 2,5% / 1,5% / 1% / 0,5%','Глубина от 2 до 9 поколений L, применяется компрессия.'],
+ ['L PRO','3% от ЛГО включая ЛО, расчёт каждый период','Выплата только по итогам полного квартала.'],
+ ['M PRO','2% мирового объёма Greenway — Master Pool','Распределяется по числу квалифицированных лидерских ветвей.'],
+ ['GM PRO и Diamond','1% Grand Master Pool; Diamond Team — 3% мирового объёма','Пулы зависят от квалификации, СГО и числа мастерских ветвей.']
+ ];
+ $('#referenceGrid').innerHTML=cards.map(c=>`<div class="ref-card"><h3>${c[0]}</h3><p>${c[2]}</p><div class="formula">${c[1]}</div></div>`).join('');
+}
 updateStep();
