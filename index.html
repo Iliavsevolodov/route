@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="theme-color" content="#f4c400" />
   <title>HERO ROUTE — Навигатор партнёра</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,115 +11,51 @@
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-  <div class="noise"></div>
-  <header class="topbar">
-    <div class="brand">HERO ROUTE</div>
-    <div class="team">КОМАНДА «СУПЕРГЕРОИ»</div>
-  </header>
+<div class="noise"></div>
+<header class="topbar"><div class="brand">HERO ROUTE</div><div class="team">КОМАНДА «СУПЕРГЕРОИ» · GREENWAY 4.0</div></header>
+<main class="app-shell">
+  <section class="hero">
+    <div class="hero-copy">
+      <div class="eyebrow">ПЕРСОНАЛЬНЫЙ БИЗНЕС-НАВИГАТОР</div>
+      <h1>МАРШРУТ<br><span>К ДОХОДУ</span></h1>
+      <p>Система переводит финансовую цель в квалификацию, ветви, ЛГО, источники выплат и конкретные действия на 90 дней.</p>
+    </div>
+    <div class="hero-graphic" aria-hidden="true"><div class="orbit o1"></div><div class="orbit o2"></div><div class="core">ТЫ</div><div class="sat s1">ЦЕЛЬ</div><div class="sat s2">ВЕТВИ</div><div class="sat s3">PRO</div></div>
+  </section>
 
-  <main class="app-shell">
-    <section class="hero">
-      <div class="eyebrow">ПЕРСОНАЛЬНЫЙ НАВИГАТОР</div>
-      <h1>ПОСТРОЙ МАРШРУТ<br><span>К СВОЕМУ ДОХОДУ</span></h1>
-      <p>Выбери цель, расскажи о своём стиле работы — система предложит подходящую стратегию, квалификацию и структуру ветвей.</p>
-      <div class="disclaimer">Расчёты являются ориентировочной моделью на основе маркетинг‑плана Greenway «Ускорение».</div>
-    </section>
+  <section class="wizard" id="wizard">
+    <div class="progress-meta"><span id="stepLabel">ШАГ 1 ИЗ 4</span><span id="progressPercent">25%</span></div><div class="progress"><div id="progressBar"></div></div>
+    <div class="step active" data-step="1"><div class="step-kicker">01 / ФИНАНСОВАЯ ЦЕЛЬ</div><h2>Сколько ты хочешь получать в месяц?</h2><div class="goal-grid" id="goalGrid"></div></div>
+    <div class="step" data-step="2"><div class="step-kicker">02 / СТИЛЬ РАБОТЫ</div><h2>Как ты относишься к личным продажам?</h2><div class="option-stack" id="salesOptions"></div></div>
+    <div class="step" data-step="3"><div class="step-kicker">03 / ЛИЧНЫЙ ОБЪЁМ</div><h2>Какой ЛО ты готов делать каждый период?</h2><div class="range-card"><div class="range-value"><span id="pvValue">200</span> PV</div><input id="pvRange" type="range" min="50" max="1000" step="50" value="200"><div class="range-marks"><span>50</span><span>200</span><span>500</span><span>1000 PV</span></div></div></div>
+    <div class="step" data-step="4"><div class="step-kicker">04 / ТЕКУЩАЯ ТОЧКА</div><h2>Какая у тебя квалификация сейчас?</h2><div class="rank-grid" id="rankGrid"></div></div>
+    <div class="wizard-actions"><button class="btn btn-secondary" id="backBtn" disabled>← НАЗАД</button><button class="btn btn-primary" id="nextBtn">ДАЛЬШЕ →</button></div>
+  </section>
 
-    <section class="wizard" id="wizard">
-      <div class="progress-wrap">
-        <div class="progress-meta"><span id="stepLabel">ШАГ 1 ИЗ 4</span><span id="progressPercent">25%</span></div>
-        <div class="progress"><div id="progressBar"></div></div>
-      </div>
+  <section class="results hidden" id="results">
+    <div class="result-header"><div><div class="eyebrow">ПЕРСОНАЛЬНЫЙ МАРШРУТ</div><h2 id="resultTitle"></h2></div><button class="btn btn-secondary" id="restartBtn">ИЗМЕНИТЬ ДАННЫЕ</button></div>
+    <div class="result-grid">
+      <article class="metric-card accent"><div class="metric-label">ЦЕЛЕВАЯ ТОЧКА</div><div class="metric-value" id="targetRank"></div><div class="metric-note" id="rankNote"></div></article>
+      <article class="metric-card"><div class="metric-label">ЦЕЛЕВОЙ ЛГО</div><div class="metric-value" id="targetLgo"></div><div class="metric-note">Боковой объём без ветвей L и выше</div></article>
+      <article class="metric-card"><div class="metric-label">СТРАТЕГИЯ</div><div class="metric-value small" id="strategyName"></div><div class="metric-note" id="strategyNote"></div></article>
+    </div>
 
-      <div class="step active" data-step="1">
-        <div class="step-kicker">ТВОЯ ФИНАНСОВАЯ ЦЕЛЬ</div>
-        <h2>Сколько ты хочешь получать в месяц?</h2>
-        <div class="goal-grid" id="goalGrid"></div>
-      </div>
+    <div class="panel map-panel"><div class="panel-head"><div><div class="panel-title">КАРТА ЦЕЛЕВОЙ СТРУКТУРЫ</div><p>Кружки показывают самостоятельные квалифицированные ветви.</p></div><div class="legend"><span><i class="dot strong"></i>ключевая</span><span><i class="dot reserve"></i>резерв</span></div></div><div class="tree-map" id="treeMap"></div></div>
 
-      <div class="step" data-step="2">
-        <div class="step-kicker">СТИЛЬ РАБОТЫ</div>
-        <h2>Как ты относишься к личным продажам?</h2>
-        <div class="option-stack" id="salesOptions"></div>
-      </div>
+    <div class="two-col">
+      <div class="panel"><div class="panel-title">ВЫПЛАТЫ ПО СЧЕТАМ</div><div class="account-tabs"><button class="tab active" data-tab="currency">ВАЛЮТНЫЙ СЧЁТ</button><button class="tab" data-tab="gift">ПОДАРОЧНЫЙ СЧЁТ</button></div><div id="accountBreakdown"></div></div>
+      <div class="panel"><div class="panel-title">ФИНАНСОВАЯ МОДЕЛЬ</div><div id="incomeBreakdown" class="breakdown"></div><div class="model-note">Пулы M PRO / GM PRO зависят от глобального объёма Greenway и числа квалифицированных долей. Поэтому показываются диапазоном, а не как гарантированная выплата.</div></div>
+    </div>
 
-      <div class="step" data-step="3">
-        <div class="step-kicker">ЛИЧНЫЙ ОБЪЁМ</div>
-        <h2>Какой личный объём ты готов делать?</h2>
-        <div class="range-card">
-          <div class="range-value"><span id="pvValue">200</span> PV</div>
-          <input id="pvRange" type="range" min="50" max="1000" step="50" value="200" />
-          <div class="range-marks"><span>50 PV</span><span>500 PV</span><span>1000 PV</span></div>
-        </div>
-      </div>
+    <div class="panel pro-panel"><div class="panel-title">PRO-КВАРТАЛ: ЧТО НУЖНО УДЕРЖАТЬ 3 ПЕРИОДА</div><div class="pro-flow" id="proFlow"></div></div>
 
-      <div class="step" data-step="4">
-        <div class="step-kicker">ТЕКУЩАЯ ТОЧКА</div>
-        <h2>Какая у тебя сейчас квалификация?</h2>
-        <div class="rank-grid" id="rankGrid"></div>
-      </div>
+    <div class="panel"><div class="panel-title">ДЕТАЛЬНАЯ СТРАТЕГИЯ</div><div class="strategy-grid" id="strategyGrid"></div></div>
+    <div class="panel roadmap-panel"><div class="panel-title">МАРШРУТ НА 90 ДНЕЙ</div><div class="roadmap" id="roadmap"></div></div>
 
-      <div class="wizard-actions">
-        <button class="btn btn-secondary" id="backBtn" disabled>НАЗАД</button>
-        <button class="btn btn-primary" id="nextBtn">ДАЛЬШЕ →</button>
-      </div>
-    </section>
-
-    <section class="results hidden" id="results">
-      <div class="result-header">
-        <div>
-          <div class="eyebrow">ТВОЙ ПЕРСОНАЛЬНЫЙ МАРШРУТ</div>
-          <h2 id="resultTitle">ЦЕЛЬ: 50 000 ₽</h2>
-        </div>
-        <button class="btn btn-secondary" id="restartBtn">ИЗМЕНИТЬ ДАННЫЕ</button>
-      </div>
-
-      <div class="result-grid">
-        <article class="metric-card accent">
-          <div class="metric-label">ЦЕЛЕВАЯ КВАЛИФИКАЦИЯ</div>
-          <div class="metric-value" id="targetRank">L PRO</div>
-          <div class="metric-note" id="rankNote"></div>
-        </article>
-        <article class="metric-card">
-          <div class="metric-label">РЕКОМЕНДУЕМОЕ КОЛИЧЕСТВО ВЕТВЕЙ</div>
-          <div class="metric-value" id="branchesCount">3–4</div>
-          <div class="metric-note">Сильные + резервные развивающиеся ветви</div>
-        </article>
-        <article class="metric-card">
-          <div class="metric-label">ТВОЯ СТРАТЕГИЯ</div>
-          <div class="metric-value small" id="strategyName">СМЕШАННАЯ</div>
-          <div class="metric-note" id="strategyNote"></div>
-        </article>
-      </div>
-
-      <div class="panel">
-        <div class="panel-title">КАК МОЖЕТ ВЫГЛЯДЕТЬ СТРУКТУРА</div>
-        <div class="branch-map" id="branchMap"></div>
-      </div>
-
-      <div class="two-col">
-        <div class="panel">
-          <div class="panel-title">ИЗ ЧЕГО МОЖЕТ СКЛАДЫВАТЬСЯ ДОХОД</div>
-          <div id="incomeBreakdown" class="breakdown"></div>
-        </div>
-        <div class="panel">
-          <div class="panel-title">ЧТО НУЖНО ВЫПОЛНИТЬ</div>
-          <div id="requirements" class="requirements"></div>
-        </div>
-      </div>
-
-      <div class="panel roadmap-panel">
-        <div class="panel-title">МАРШРУТ НА 90 ДНЕЙ</div>
-        <div class="roadmap" id="roadmap"></div>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <span>HERO ROUTE</span>
-    <span>Персональный маршрут к цели</span>
-  </footer>
-
-  <script src="./app.js"></script>
+    <div class="panel reference-panel"><div class="panel-title">КАК РАБОТАЮТ ВЫПЛАТЫ GREENWAY 4.0</div><div class="reference-grid" id="referenceGrid"></div></div>
+  </section>
+</main>
+<footer><span>HERO ROUTE</span><span>Расчётная модель · курс РФ 1 у.е. = 90 ₽</span></footer>
+<script src="./app.js"></script>
 </body>
 </html>
